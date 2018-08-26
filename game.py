@@ -28,27 +28,28 @@ board: list = [[' ', ' ', ' '],
 
 keyBindings = {}
 bindingNo = 1
-for line in range(0, len(board)):
-    for row in range(0, len(board)):
-        keyBindings[str(bindingNo)] = [ line, row ]
+for row in range(0, len(board)):
+    for place in range(0, len(board)):
+        keyBindings[str(bindingNo)] = [ row, place ]
         bindingNo += 1
 
 def printBoard(boardData: board):
     print('\n +---+---+---+')
-    for line in boardData:
+    for row in boardData:
         print(' | ', end='')
-        for row in line:
-            if row == 'X':
-                colouredRow = bcolors.OKBLUE + row + bcolors.ENDC
-            elif row == 'O':
-                colouredRow = bcolors.OKGREEN + row + bcolors.ENDC
+        for place in row:
+            if place == 'X':
+                colouredPlace = bcolors.OKBLUE + place + bcolors.ENDC
+            elif place == 'O':
+                colouredPlace = bcolors.OKGREEN + place + bcolors.ENDC
             else:
-                colouredRow = row
-            print(colouredRow, end=' | ')
+                colouredPlace = place
+            print(colouredPlace, end=' | ')
         print('\n +---+---+---+')
 
 def beginTurn(player: Player):
     global playersTurn
+    global winner
     printBoard(board)
     move = input('\n' + player.name + ", It\'s your turn (1-9): ")
     try:
@@ -60,24 +61,28 @@ def beginTurn(player: Player):
         print(bcolors.WARNING + 'That space on the board is occupied! Choose another!' + bcolors.ENDC)
         return
     board[key[0]][key[1]] = player.piece
-    checkForVictory(player)
+    winner = getWinner(player)
     playersTurn = 1 - playersTurn
 
-def checkForVictory(player: Player):
-    global winner
-    winningPattern = player.piece * len(board)
+def getWinner(player: Player):
+    diag1, diag2 = '', ''
     for x in range(0, len(board)):    
-        if (board[x][0] + board[x][1] + board[x][2] == winningPattern or # rows
-            board[0][x] + board[1][x] + board[2][x] == winningPattern or # cols 
-            board[0][0] + board[1][1] + board[2][2] == winningPattern or # diag
-            board[0][2] + board[1][1] + board[2][0] == winningPattern):  # diag
-                winner = player.name
-    # tie
-    for line in board:
-        for row in line:
-            if row == ' ':
-                return
-    winner = 'Nobody'
+        diag1 += board[x][x]
+        diag2 += board[x][(len(board)-1) - x]
+
+        rows, cols = '', ''
+        for y in range(0, len(board)):  
+            rows += board[x][y]
+            cols += board[y][x]
+
+        if player.piece * len(board) in { rows, cols, diag1, diag2 }:
+            return player.name
+
+    for row in board:
+        for place in row:
+            if place == ' ':
+                return None
+    return 'Nobody'
 
 while winner == None:
     beginTurn(players[playersTurn])
